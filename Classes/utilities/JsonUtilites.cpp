@@ -8,6 +8,84 @@
 #include "JsonUtilites.hpp"
 #include "../servicelayer/exception/GameException.hpp"
 
+std::string JsonUtilites::jsonStringFromMap(std::map<const char *, std::string *> *map)
+{
+    if(map == nullptr)
+             throw GameException("map can't be null",G_NULLPOINTER);
+         
+         assert(map != NULL);
+
+        //-------------Document creattion-------------
+         rapidjson::Document document; // create the rapidjson Document
+         rapidjson::Document::AllocatorType& allocator = document.GetAllocator(); // create document allocator
+         document.SetObject(); // set Object
+         //-------------End of Document creattion-------------
+
+         
+         //-------------Start Buffer creattion-------------
+         rapidjson::StringBuffer stringBuffer;
+         rapidjson::Writer<rapidjson::StringBuffer> writer(stringBuffer);
+         stringBuffer.Clear();
+         //-------------End Buffer creattion-------------
+
+         //-------------Iterate the Map -------------
+         
+         std::map<const char * , std::string*>::iterator iterator = map->begin();
+         
+         while (iterator != map->end()) {
+             const char * key = iterator->first;
+             std::string * mapValue = iterator->second;
+             document.AddMember(StringRef(key),StringRef(mapValue->c_str()),allocator);
+             iterator++;
+         }
+         //-------------End of Iterate the Map -------------
+
+         document.Accept(writer);
+         
+         return stringBuffer.GetString();
+    
+    
+}
+
+
+std::string JsonUtilites::jsonStringFromMap(std::map<const char *, rapidjson::Value *> *map){
+    if(map == nullptr)
+           throw GameException("map can't be null",G_NULLPOINTER);
+       
+       assert(map != NULL);
+
+      //-------------Document creattion-------------
+       rapidjson::Document document; // create the rapidjson Document
+       rapidjson::Document::AllocatorType& allocator = document.GetAllocator(); // create document allocator
+       document.SetObject(); // set Object
+       //-------------End of Document creattion-------------
+
+       
+       //-------------Start Buffer creattion-------------
+       rapidjson::StringBuffer stringBuffer;
+       rapidjson::Writer<rapidjson::StringBuffer> writer(stringBuffer);
+       stringBuffer.Clear();
+       //-------------End Buffer creattion-------------
+
+       //-------------Iterate the Map -------------
+       
+       std::map<const char * , rapidjson::Value*>::iterator iterator = map->begin();
+       
+       while (iterator != map->end()) {
+           std::string key = iterator->first;
+           rapidjson::Value * mapValue = iterator->second;
+           addValueToDocument(document , key , mapValue , allocator);
+           iterator++;
+       }
+       //-------------End of Iterate the Map -------------
+
+       document.Accept(writer);
+       
+       return stringBuffer.GetString();
+    
+    
+}
+
 std::string JsonUtilites::jsonStringFromMap(std::map<std::string, rapidjson::Value *> *map){
     
     
@@ -46,7 +124,7 @@ std::string JsonUtilites::jsonStringFromMap(std::map<std::string, rapidjson::Val
     return stringBuffer.GetString();
 }
 
-std::string JsonUtilites::urlStringFromMap(std::map<std::string, rapidjson::Value *> *map){
+std::string JsonUtilites::urlStringFromMap(std::map<const char *, std::string *> *map){
     if(map == nullptr)
          throw GameException("map can't be null",G_NULLPOINTER);
      
@@ -56,7 +134,38 @@ std::string JsonUtilites::urlStringFromMap(std::map<std::string, rapidjson::Valu
      std::string urlString = "?";
      //-------------Iterate the Map -------------
      
-     std::map<std::string , rapidjson::Value*>::iterator iterator = map->begin();
+     std::map<const char * , std::string*>::iterator iterator = map->begin();
+     
+     while (iterator != map->end()) {
+         std::string key = iterator->first;
+         std::string * mapValue = iterator->second;
+         urlString.append(key.c_str());
+         urlString.append("=");
+         urlString.append(mapValue->c_str());
+         if(iterator != map->end())
+         urlString.append("&");
+         
+         iterator++;
+     }
+     //-------------End of Iterate the Map -------------
+
+     
+     return urlString;
+    
+}
+
+
+std::string JsonUtilites::urlStringFromMap(std::map<const char *, rapidjson::Value *> *map){
+    if(map == nullptr)
+         throw GameException("map can't be null",G_NULLPOINTER);
+     
+     assert(map != NULL);
+     
+     //-------------Start Buffer creattion-------------
+     std::string urlString = "?";
+     //-------------Iterate the Map -------------
+     
+     std::map<const char * , rapidjson::Value*>::iterator iterator = map->begin();
      
      while (iterator != map->end()) {
          std::string key = iterator->first;
@@ -166,6 +275,72 @@ void JsonUtilites::addValueToDocument(rapidjson::Document &document , std::strin
             if(value->IsUint())
             {
                 document.AddMember(StringRef(key.c_str()),value->GetUint(),allocator);
+            }
+           break;
+            
+        default:
+            break;
+    }
+    
+}
+
+
+void JsonUtilites::addValueToDocument(rapidjson::Document &document , char *key,rapidjson::Value * value,rapidjson::Document::AllocatorType& allocator){
+    
+    switch (value->GetType()) {
+            
+        case kNullType:
+            
+            break;
+        case kFalseType: // Funny to have false and true check but this how the type is being checked in RapidJson
+            
+            document.AddMember(StringRef(key),value->GetBool(),allocator);
+            
+           break;
+        case kTrueType:
+            
+            document.AddMember(StringRef(key),value->GetBool(),allocator);
+
+            break;
+       
+        case kObjectType:
+       
+            document.AddMember(StringRef(key),value->GetObject(),allocator);
+
+           break;
+        case kArrayType:
+            
+            document.AddMember(StringRef(key),value->GetArray(),allocator);
+
+            break;
+        case kStringType:
+            
+            document.AddMember(StringRef(key),StringRef(value->GetString()),allocator);
+
+           break;
+        case kNumberType:
+            //TODO I don't like all this if statements need to be checked in the future
+            if(value->IsInt()){
+            
+                document.AddMember(StringRef(key),value->GetInt(),allocator);
+                
+            }else
+            if(value->IsDouble())
+            {
+                document.AddMember(StringRef(key),value->GetDouble(),allocator);
+            }else
+            if(value->IsFloat())
+            {
+                document.AddMember(StringRef(key),value->GetFloat(),allocator);
+            }else
+            if(value->IsUint64())
+            {
+                document.AddMember(StringRef(key),value->GetUint64(),allocator);
+            }
+            else
+            if(value->IsUint())
+            {
+                document.AddMember(StringRef(key),value->GetUint(),allocator);
             }
            break;
             
