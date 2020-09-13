@@ -5,9 +5,6 @@
     </embed>
 </object>
 
- <div class="bg-image">
-    <img class="bg-image-source" src="https://github.com/youssefmyh/ThreadPoolcommandObserver/blob/master/pattern.jpg" srcset="https://github.com/youssefmyh/ThreadPoolcommandObserver/blob/master/pattern.jpg 320w, https://github.com/youssefmyh/ThreadPoolcommandObserver/blob/master/pattern.jpg 640w" alt="Image description.">
-  </div>
 
 
 
